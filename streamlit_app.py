@@ -23,19 +23,14 @@ if st.sidebar.button("Submit"):
 
 # Initialize the session state to store the inspiration words
 if 'selected_words' not in st.session_state:
-    # Define eight key themes and associated words
+    # Define key themes and associated words
     themes = {
-         "Nature": ["tree", "flower", "waterfall", "butterfly"],
-        "Technology": ["smartphone", "robot", "drone", "camera"],
-        "Space": ["rocket", "moon", "astronaut", "satellite"],
-        "Art": ["paintbrush", "palette", "easel", "sculpture"],
-        "Architecture": ["castle", "lighthouse", "bridge", "pagoda"],
-        "Music": ["guitar", "piano", "microphone", "violin"],
-        "History": ["pyramid", "knight", "ancient ship", "chariot"],
-         "Adventure": ["compass", "treasure map", "jungle", "cave"]
+        "Nature": ["tree", "flower", "waterfall", "butterfly"],
+        "Technology": ["smartphone", "robot", "computer", "camera"],
+        "Adventure": ["compass", "treasure map", "jungle", "cave"]
     }
 
-    # Select three random keywords from the eight themes and store them in session state
+    # Select three random keywords from the themes and store them in session state
     selected_words = []
     for theme in random.sample(list(themes.keys()), 3):  # Pick 3 random themes
         selected_words.append(random.choice(themes[theme]))  # Pick 1 word from each selected theme
@@ -75,6 +70,12 @@ add_slider = st.sidebar.slider(
     0.0, 100.0, 50.0
 )
 
+# Initialize session state variables for drawing and caption
+if 'drawing_done' not in st.session_state:
+    st.session_state['drawing_done'] = False
+if 'caption_submitted' not in st.session_state:
+    st.session_state['caption_submitted'] = False
+
 # Canvas for drawing
 st.subheader("Draw something below:")
 canvas_result = st_canvas(
@@ -88,38 +89,55 @@ canvas_result = st_canvas(
     key="canvas",
 )
 
-# Function to interact with OpenAI's ChatCompletion API for feedback
-def get_feedback_from_gpt(description):
-    prompt = f"Evaluate this drawing inspired by the words {', '.join(st.session_state.selected_words)}. Provide constructive feedback."
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=150,
-            temperature=0.7,
-        )
-        return response['choices'][0]['message']['content'].strip()
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
-        return None
-
 # Button to indicate when the drawing is done
-if st.button("Done"):
+if st.button("Done", key='done_button'):
     if canvas_result.image_data is not None:
         st.write("Here's your drawing:")
         st.image(canvas_result.image_data)  # Display the drawing
 
-        # Example description (you could add image analysis here in future)
-        drawing_description = f"Drawing based on the words {', '.join(st.session_state.selected_words)}."
-
-        # Send the description to OpenAI for feedback
-        feedback = get_feedback_from_gpt(drawing_description)
-
-        # Display feedback
-        if feedback:
-            st.write("ChatGPT's Feedback on your drawing:")
-            st.write(feedback)
+        # Store the image data and mark drawing as done
+        st.session_state['user_drawing'] = canvas_result.image_data
+        st.session_state['drawing_done'] = True
     else:
-        st.write("Please draw something on the canvas to get feedback.")
+        st.write("Please draw something on the canvas to proceed.")
+
+# If the drawing is done, prompt for caption
+if st.session_state.get('drawing_done', False):
+    caption = st.text_input("Enter a caption for your drawing:", key='caption_input')
+
+    # Add a submit button for the caption
+    if st.button("Submit Caption", key='submit_caption_button'):
+        if caption:
+            # Store the caption and mark caption as submitted
+            st.session_state['caption'] = caption
+            st.session_state['caption_submitted'] = True
+        else:
+            st.warning("Please enter a caption before submitting.")
+
+# If the caption is submitted, generate an image using DALL·E
+if st.session_state.get('caption_submitted', False):
+    # Function to generate an image using DALL·E
+    def get_image_from_dalle(prompt):
+        try:
+            response = openai.Image.create(
+                prompt=prompt,
+                n=1,
+                size="512x512"
+            )
+            image_url = response['data'][0]['url']
+            return image_url
+        except Exception as e:
+            st.error(f"An error occurred while generating the image: {e}")
+            return None
+
+    # Use the caption as the prompt for DALL·E
+    prompt = st.session_state['caption']
+
+    st.write("Generating an AI image based on your caption...")
+    generated_image_url = get_image_from_dalle(prompt)
+
+    if generated_image_url:
+        st.write("Here's an AI-generated image based on your caption:")
+        st.image(generated_image_url)
+    else:
+        st.write("Failed to generate an image.")
