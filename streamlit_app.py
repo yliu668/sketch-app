@@ -11,13 +11,58 @@ import pandas as pd  # For saving data
 # Set OpenAI API key
 openai.api_key = st.secrets.get("openai_api_key", None)
 
+
 # Consent Page
 if "consent_given" not in st.session_state:
-    st.title("Consent to Participate")
+    st.title("Step1: Research consent")
     st.write("Please read the consent information carefully before participating in this study...")
-    st.write("By clicking 'I Agree', you consent to participate in this study voluntarily. You understand the study involves drawing tasks and providing feedback on creative activities.")
     
-    if st.button("I Agree"):
+    # Display the consent information in a scrollable text area
+    consent_text = """
+Introduction
+You are invited to consider participating in this research study. Please take as much time as you need to make your decision. Feel free to discuss your decision with whomever you want, but remember that the decision to participate, or not to participate, is yours. If you decide that you want to participate, please sign and date where indicated at the end of this form.
+ 
+Background and Purpose
+This study is designed to investigate the various cognitive mechanisms of reasoning and creativity. 
+ 
+Study Plan
+
+This is a study designed to investigate the cognitive mechanisms of reasoning and creativity. You will complete this survey online.  In the future, researchers may recontact you to invite you complete additional portions of the study to collect new subsets of information relating to the original survey. There is no obligation for you to participate in follow up portions of the study.
+ 
+Risks
+There are very few risks associated with participating in this study.
+ 
+There are no direct risks associated with the cognitive behavioral measures we will ask you to complete, but some individuals may find these tasks tiring or stressful.
+ 
+Benefits
+If you agree to take part in this study, there will be no direct benefit to you. However, information gathered in this study may help researchers understand how students solve problems with images and texts.
+ 
+Confidentiality
+Every effort will be made to keep any information collected about you confidential.  However, it is impossible to guarantee absolute confidentiality.
+ 
+In order to keep information about you safe, digital study data will be kept in a password-protected file on the researcher’s personal computer and on computers in the Laboratory for Relational Cognition, which only the researchers can access.  An additional copy of the data will be kept on a Georgetown University server, which is password protected and only accessible to the researchers.  Paper study data will be kept in a locked file cabinet in the Laboratory for Relational Cognition.  Only researchers on the study team will have access to the data.  Your data will be stored with an alphanumeric code, in a way that does not include your name or any other identifying information. Once the data is not connected to your identity, it can be shared. Only authorized personnel will be able to connect your data to your name.
+ 
+The research team, the Georgetown University Institutional Review Board (IRB), other authorized Georgetown University personnel may request to inspect and/or copy your study records for quality assurance, data analysis and other research related, operational or administrative purposes. That is, to make sure that the study is being carried out properly.
+ 
+Your Rights As A Research Participant
+Participation in this study is entirely voluntary at all times. You can choose not to participate at all or to leave the study at any point. If you decide not to participate or to leave the study, there will be no effect on your relationship with the researchers or any other negative consequences.
+ 
+If you decide that you no longer want to take part in the study, you are encouraged to inform the researcher of your decision. The information already obtained through your participation will be included in the data analysis and final report for this study.  If you would prefer that this information be discarded, please inform the researcher.
+ 
+Questions or concerns?
+If you have questions about the study, you may contact Dr. Adam Green at aeg58@georgetown.edu.
+ 
+Please call the Georgetown University IRB Office at 202-687-1506 (8:30am to 5:00pm, Monday to Friday) if you have any questions about your rights as a research participant.
+ 
+Consent of Participant
+I understand all of the information in this Informed Consent Form.
+I freely and voluntarily agree to participate in this study.
+
+    """
+    st.text_area("Consent Information", consent_text, height=300, disabled=True)
+    
+    # Consent button
+    if st.button("Yes, I Agree"):
         st.session_state["consent_given"] = True
         st.success("Please fill in the information below!")
     else:
